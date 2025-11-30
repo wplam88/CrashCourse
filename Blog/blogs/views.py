@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.http import Http404
 
 # check if this is right or needs to be renamed
 from .models import Blog, BlogPost
@@ -21,6 +23,7 @@ def blog(request, blog_id):
     context = {'blog': blog, 'posts': posts}
     return render(request, 'blogs/blog.html', context)
 
+@login_required
 def new_blog(request):
     """create a blog"""
     if request.method != 'POST':
@@ -28,15 +31,22 @@ def new_blog(request):
     else:
         form = BlogForm(request.POST)
         if form.is_valid():
-            form.save()
+            new_blog = form.save(commit=False)
+            new_blog.owner = request.user
+            new_blog.save()
             return redirect('blogs:blogs')
 
     context = {'form': form}
     return render(request, 'blogs/new_blog.html', context)
 
+@login_required
 def new_post(request, blog_id):
     """create a blog post"""
     blog = Blog.objects.get(id=blog_id)
+
+    # check if owner is the current user
+    if blog.owner != request.user:
+        raise Http404
 
     if request.method != 'POST':
         form = BlogPostForm()
@@ -51,10 +61,15 @@ def new_post(request, blog_id):
     context = {'blog': blog, 'form': form}
     return render(request, 'blogs/new_post.html', context)
 
+@login_required
 def edit_post(request, post_id):
     """edit a blog post"""
     post = BlogPost.objects.get(id=post_id)
     blog = post.blog
+
+    # check if owner is the current user
+    if blog.owner != request.user:
+        raise Http404
 
     if request.method != 'POST':
         form = BlogPostForm(instance=post)
@@ -66,5 +81,3 @@ def edit_post(request, post_id):
 
     context = {'post': post, 'blog': blog, 'form': form}
     return render(request, 'blogs/edit_post.html', context)
-
-
