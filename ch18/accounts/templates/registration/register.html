@@ -1,12 +1,13 @@
 {% extends 'learning_logs/base.html' %}
 
 {% block content %}
-
-<form action = "{% url 'accounts:register' %}" method='post'>
-    {% csrf_token %}
-    {{ form.as_div }}
-
-    <button name="submit">Register</button>
-</form>
-
+<div class="container mt-4">
+    <h2>Register</h2>
+    <form action="{% url 'accounts:register' %}" method="post" class="mt-3">
+        {% csrf_token %}
+        {{ form.as_div }}
+        <button type="submit" class="btn btn-primary mt-2">Register</button>
+    </form>
+</div>
 {% endblock content %}
+
